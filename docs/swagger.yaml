@@ -1,0 +1,687 @@
+openapi: 3.0.3
+info:
+  title: Basic Bank System
+  description: |-
+    aplikasi ini untuk merepresentasikan pengguna, rekening bank, dan transaksi. Pengguna dapat memiliki profil terkait. Setiap rekening bank memiliki saldo dan terkait dengan transaksi sebagai sumber atau tujuan. Ini memungkinkan sistem untuk melakukan pendaftaran pengguna, transfer dana, dan melacak riwayat transaksi.
+  contact:
+    email: alex@mail.com
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api/v1
+tags:
+  - name: Users
+    description: Operations related to users
+  - name: Accounts
+    description: Operations related to accounts
+  - name: Transactions
+    description: Operations related to transactions
+paths:
+  /users:
+    post:
+      tags:
+        - Users
+      operationId: post-create-new-user
+      summary: Create a new user and a new profile
+      description: Creates a new user and a new profile with the provided information.
+      requestBody:
+        $ref: "#/components/requestBodies/CreateUser"
+      responses:
+        "201":
+          description: Successful user creation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BasicResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          newUser:
+                            $ref: "#/components/schemas/UserModel"
+                          newProfile:
+                            $ref: "#/components/schemas/ProfileModel"
+        "400":
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "failed"
+    get:
+      tags:
+        - Users
+      operationId: get-fetch-all-user
+      summary: Get all user
+      description: Retrieves a list of all registered user.
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          required: false
+          description: Page number for pagination.
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          required: false
+          description: Number of items per page.
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BasicResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          pagination:
+                            $ref: "#/components/schemas/Pagination"
+                          users:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/UserModel"
+  /users/{userId}:
+    get:
+      tags:
+        - Users
+      operationId: get-fetch-user-detail
+      summary: Get user details
+      description: Retrieves details of a specific user.
+      parameters:
+        - in: path
+          name: userId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the user to retrieve.
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BasicResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserModel"
+        "400":
+          description: No user found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "failed"
+  /users/auth/register:
+    post:
+      tags:
+        - Users
+      operationId: post-register-user
+      summary: Register user
+      description: Register user with the provided information.
+      requestBody:
+        $ref: "#/components/requestBodies/RegisterUser"
+      responses:
+        "201":
+          description: User registration was successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BasicResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          newUser:
+                            $ref: "#/components/schemas/UserModel"
+        "400":
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "failed"
+  /users/auth/login:
+    post:
+      tags:
+        - Users
+      operationId: post-login-user
+      summary: Login user
+      description: Login user
+      requestBody:
+        $ref: "#/components/requestBodies/LoginUser"
+      responses:
+        "200":
+          description: User login was successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BasicResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          newUser:
+                            $ref: "#/components/schemas/UserModel"
+        "400":
+          description: invalid email or password!
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "failed"
+  /users/auth/authenticate:
+    get:
+      tags:
+        - Users
+      operationId: get-user-by-authenticate
+      summary: Get user by authenticate
+      description: Get user by authenticate
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BasicResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          user:
+                            $ref: "#/components/schemas/UserModel"
+      security:
+        - bearerAuth: []
+  /accounts:
+    post:
+      tags:
+        - Accounts
+      operationId: post-creat-new-account
+      summary: Create a new account
+      description: Creates a new account with the provided
+      requestBody:
+        $ref: "#/components/requestBodies/CreateAccount"
+      responses:
+        "201":
+          description: Successful account creation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BasicResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          newAccount:
+                            $ref: "#/components/schemas/AccountModel"
+        "400":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "failed"
+    get:
+      tags:
+        - Accounts
+      operationId: get-fetch-all-account
+      summary: Get all accounts
+      description: Retrieves a list of all registered account.
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          required: false
+          description: Page number for pagination.
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          required: false
+          description: Number of items per page.
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BasicResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          pagination:
+                            $ref: "#/components/schemas/Pagination"
+                          accounts:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/AccountModel"
+  /accounts/{accountId}:
+    get:
+      tags:
+        - Accounts
+      operationId: get-fetch-account-detail
+      summary: Get user details
+      description: Retrieves details of a specific account.
+      parameters:
+        - in: path
+          name: accountId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the account to retrieve.
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BasicResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AccountModel"
+        "400":
+          description: No account found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "failed"
+  /transactions:
+    post:
+      tags:
+        - Transactions
+      operationId: post-creat-new-transaction
+      summary: Create a new transaction
+      description: Creates a new transaction with the provided
+      requestBody:
+        $ref: "#/components/requestBodies/CreateTransaction"
+      responses:
+        "201":
+          description: Transaction successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BasicResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          newTransaction:
+                            $ref: "#/components/schemas/TransactionModel"
+        "400":
+          description: Source or destination account not found or Insufficient balance in the source account
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "failed"
+    get:
+      tags:
+        - Transactions
+      operationId: get-fetch-all-transaction
+      summary: Get all accounts
+      description: Retrieves a list of all registered transaction.
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          required: false
+          description: Page number for pagination.
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          required: false
+          description: Number of items per page.
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BasicResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          pagination:
+                            $ref: "#/components/schemas/Pagination"
+                          transactions:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/TransactionModel"
+  /transactions/{transactionId}:
+    get:
+      tags:
+        - Transactions
+      operationId: get-fetch-transaction-detail
+      summary: Get user details
+      description: Retrieves details of a specific transaction.
+      parameters:
+        - in: path
+          name: transactionId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the transaction to retrieve.
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "success"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      amount:
+                        type: integer
+                        example: 100000
+                      source_account_id:
+                        type: integer
+                        example: 1
+                      destination_account_id:
+                        type: integer
+                        example: 2
+                      source_account:
+                        type: object
+                        properties:
+                          user:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                example: "arfin 1"
+                      destination_account:
+                        type: object
+                        properties:
+                          user:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                example: "arfin 2"
+                $ref: "#/components/schemas/BasicResponse"
+        "400":
+          description: No account found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "failed"
+components:
+  schemas:
+    BasicResponse:
+      title: BasicResponse
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "success"
+    UserModel:
+      title: User
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "arfin"
+        email:
+          type: string
+          example: "arfin@mail.com"
+        password:
+          type: string
+          example: "$2b$10$wpqr1W8aUNCN7BZZ3o6sz.meX9rB/aItp5Mw/0q7GaRmJbsU2GGbK"
+    ProfileModel:
+      title: Profile
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        identity_type:
+          type: string
+          example: "KTP"
+        identity_number:
+          type: string
+          example: "1234567890"
+        address:
+          type: string
+          example: "Jalan Sudirman No. 123"
+        userId:
+          type: integer
+          example: 1
+    AccountModel:
+      title: Account
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        bank_name:
+          type: string
+          example: "BCA"
+        bank_account_number:
+          type: string
+          example: "0123456789"
+        balance:
+          type: integer
+          example: 1000000
+        user_id:
+          type: integer
+          example: 1
+    TransactionModel:
+      title: Transaction
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        amount:
+          type: integer
+          example: 100000
+        source_account_id:
+          type: integer
+          example: 1
+        destination_account_id:
+          type: integer
+          example: 2
+    Pagination:
+      title: Pagination
+      type: object
+      properties:
+        links:
+          type: object
+          properties:
+            next:
+              type: string
+              example: "https://domain.com/users?page=3&limit=10"
+            prev:
+              type: string
+              example: "https://domain.com/users?page=1&limit=10"
+        total_items:
+          type: integer
+          example: 100
+  requestBodies:
+    CreateUser:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                example: "arfin"
+              email:
+                type: string
+                example: "arfin@mail.com"
+              password:
+                type: string
+                example: "123456"
+              identity_type:
+                type: string
+                example: "KTP"
+              identity_number:
+                type: string
+                example: "1234567890"
+              address:
+                type: string
+                example: "Jalan Sudirman No. 123"
+    RegisterUser:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                example: "arfin"
+              email:
+                type: string
+                example: "arfin@mail.com"
+              password:
+                type: string
+                example: "123456"
+              password_confirmation:
+                type: string
+                example: "123456"
+    LoginUser:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+                example: "arfin@mail.com"
+              password:
+                type: string
+                example: "123456"
+    CreateAccount:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              bank_name:
+                type: string
+                example: "BCA"
+              bank_account_number:
+                type: string
+                example: "0123456789"
+              balance:
+                type: integer
+                example: 1000000
+              user_id:
+                type: integer
+                example: 1
+    CreateTransaction:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              amount:
+                type: integer
+                example: 100000
+              source_account_id:
+                type: integer
+                example: 1
+              destination_account_id:
+                type: integer
+                example: 2
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
